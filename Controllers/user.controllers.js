@@ -65,3 +65,28 @@ export const user_login = async (req, res, next) => {
 export const user_logout = (req, res, next) => {
   res.clearCookie("token").json({ msg: "cookies have been terminated" });
 };
+
+export const user_edit_pass = async (req, res, next) => {
+  try {
+    const { email, password, new_password1, new_password2 } = req.body;
+    console.log(req.body);
+    const userFound = await User.findOne({ email: email });
+    if (!userFound || !userFound.activated) {
+      res.json({
+        msg: "No user registered with this email or you didn't activate your account",
+      });
+    } else if (!(await passwordCheck(userFound, password))) {
+      res.json({ msg: "your current password doesn't match" });
+    } else if (new_password1 !== new_password2) {
+      res.json({ msg: "your new password should match in 2 lines" });
+    } else {
+      userFound.email=email || userFound.email
+      userFound.password= password||userFound.password
+      await userFound.save()
+      res.json({msg:"OK",userFound})
+      console.log(userFound);
+    }
+  } catch (error) {
+    next(error);
+  }
+};
